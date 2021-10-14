@@ -1,0 +1,30 @@
+version: '3.7'
+
+networks:
+  app-net:
+    ipam:
+      driver: default
+
+services:
+  nginx:
+    container_name: prv_lnp
+    image: ccr.ccs.tencentyun.com/dduh/dduh:lnp-v27
+    ports:
+      - "3031:80"
+      - "3032:81"
+      - "3033:82"
+      - "3034:83"
+    tty: true
+    volumes:
+      - /data/wwwprv:/var/www
+      - /data/logs/wwwprv/nginx:/var/log/nginx
+      - /data/docker/prv-docker/config/nginx/conf.d:/etc/nginx/conf.d
+      #- /data/docker/release-docker/config/nginx/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - app-net
+  redis:
+    container_name: prv_redis
+    image: ccr.ccs.tencentyun.com/dduh/redis:v1
+    tty: true
+    networks:
+      - app-net
