@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-wp-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dduh-nginx
+  labels:
+    app: dduh
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: dduh-nginx
+    tier: frontend
+  type: NodePort
+  sessionAffinity: ClientIP
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: dduh-nginx
+  labels:
+    app: dduh
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dduh-nginx
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: dduh-nginx
+        tier: frontend
+    spec:
+      containers:
+      - name: nginx
+        image: ccr.ccs.tencentyun.com/dduh/dduh:nginx-v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: dduh-persistent-storage
+          mountPath: /usr/local/nginx/html
+        - name: config
+          mountPath: /usr/local/nginx/conf/vhost/site.conf
+          subPath: site.conf
+        #imagePullSecrets:
+         #- name: registrypullsecret
+      volumes:
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+          claimName: wp-pvc02
+      - name: config
+        configMap:
+          name: nginx-wp-config
